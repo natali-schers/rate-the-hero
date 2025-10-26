@@ -5,8 +5,16 @@ import { Button } from '../common-components/Button/Button';
 import { SearchField } from '../common-components/SearchField/SearchField';
 import { HeroCard } from '../components/HeroCard/HeroCard';
 import { Spaces } from '../shared/DesignTokens';
+import axios from 'axios';
 
-const HeroesGrid = styled(Box) `
+async function searchHero(heroName) {
+	const { data } = await axios.get(`/search/${heroName}`, {
+		baseURL: `${process.env.REACT_APP_SUPER_HERO_API_BASE_URL}/${process.env.REACT_APP_SUPER_HERO_API_KEY}`,
+	});
+	return data.results || [];
+}
+
+const HeroesGrid = styled(Box)`
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: ${Spaces.ONE_HALF};
@@ -17,32 +25,29 @@ const HeroesGrid = styled(Box) `
 `;
 
 export function Search() {
-	const initialState = [
-		{
-			secretIdentity: 'Terry McGinnis',
-			name: 'Batman',
-			picture:
-				'https://www.superherodb.com/pictures2/portraits/10/100/10441.jpg',
-			universe: 'DC Comics',
-		},
-		{
-			secretIdentity: 'Bruce Wayne',
-			name: 'Batman',
-			picture:
-				'https://www.superherodb.com/pictures2/portraits/10/100/639.jpg',
-			universe: 'DC Comics',
-		},
-		{
-			secretIdentity: 'Dick Grayson',
-			name: 'Batman II',
-			picture:
-				'https://www.superherodb.com/pictures2/portraits/10/100/1496.jpg',
-			universe: 'DC Comics',
-		},
-	];
+	const [heroes, setHeroes] = React.useState([]);
+	const [search, setSearch] = React.useState({
+		value: '',
+		doSearch: false,
+	});
 
-	const [heroes, setHeroes] = React.useState(initialState);
-	
+	function handleUpdateSearchValue({ target: { value } }) {
+		setSearch((prevValue) => ({ ...prevValue, value }));
+	}
+
+	function handleSearch() {
+		setSearch((prevValue) => ({ ...prevValue, doSearch: true }));
+	}
+
+	React.useEffect(() => {
+		if (search.doSearch) {
+			searchHero(search.value).then((heroes) => {
+				setHeroes(heroes);
+				setSearch((prevValue) => ({ ...prevValue, doSearch: false }));
+			});
+		}
+	}, [search]);
+
 	return (
 		<>
 			<Flex
@@ -53,22 +58,28 @@ export function Search() {
 				mb={[Spaces.TWO, Spaces.FOUR]}
 			>
 				<Box flexGrow="1">
-					<SearchField placeholder="Digite um nome de herói ou heroína" />
+					<SearchField
+						placeholder="Digite um nome de herói ou heroína"
+						onKeyUp={handleUpdateSearchValue}
+					/>
 				</Box>
 				<Box ml={Spaces.TWO}>
-					<Button>Buscar</Button>
+					<Button onClick={handleSearch}>Buscar</Button>
 				</Box>
 			</Flex>
+
 			<HeroesGrid
 				px={[Spaces.ONE, Spaces.TWO]}
 				pb={[Spaces.ONE, Spaces.TWO]}
 			>
 				{heroes.map((hero) => (
 					<HeroCard
-						secretIdentity={hero.secretIdentity}
+						key={hero.id}
+						id={hero.id}
+						secretIdentity={hero.biography['full-name']}
 						name={hero.name}
-						picture={hero.picture}
-						universe={hero.universe}
+						picture={hero.image.url}
+						universe={hero.biography.publisher}
 					/>
 				))}
 			</HeroesGrid>

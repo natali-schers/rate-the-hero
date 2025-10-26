@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import styled from 'styled-components';
 import {
 	Colors,
@@ -8,7 +9,7 @@ import {
 	FontSizes,
 } from '../../shared/DesignTokens';
 
-export const ButtonLink = styled.a`
+export const ButtonLink = styled(Link)`
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
